@@ -101,6 +101,12 @@ variable "metadata" {
   default     = {}
 }
 
+variable "labels" {
+  type        = map(string)
+  description = "Labels, provided as a map"
+  default     = {}
+}
+
 #########
 # SLURM #
 #########
