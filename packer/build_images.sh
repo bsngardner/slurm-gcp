@@ -49,4 +49,5 @@ else
             gcloud compute images remove-iam-policy-binding $p_image --member="$member" --role='roles/compute.viewer' --project="$SLURM_GCP_PROJECT"
         done
     done
+    mv $image_list_file ${image_list_file}.old
 fi
