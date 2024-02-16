@@ -6,6 +6,7 @@ if [ -z $IMAGE ]; then
 fi
 if [ ! -f builds/$IMAGE.hcl ]; then
     echo "Build information for $IMAGE does not exists, ensure that you have the corresponding file builds/$IMAGE.hcl"
+    exit 1
 fi
 VERSION=$2
 if [ -z $VERSION ]; then
@@ -25,9 +26,11 @@ image_list_file="/tmp/images.list"
 testing_members=("group:hpc-toolkit-eng@google.com" "serviceAccount:508417052821-compute@developer.gserviceaccount.com" "serviceAccount:508417052821@cloudbuild.gserviceaccount.com")
 
 if [ "x$PUBLISH" == "xno" ]; then
-    packer build -var-file builds/$IMAGE.hcl -var "project_id=$SLURM_GCP_PROJECT" -var "slurmgcp_version=$VERSION" $SLURM_VERSION $EXTRA_VARS .
+    packer build -var-file builds/$IMAGE.hcl -var "project_id=$SLURM_GCP_PROJECT" -var "slurmgcp_version=$VERSION" -var 'image_licenses=["projects/schedmd-slurm-public/global/licenses/schedmd-slurm-gcp-free-plan"]' $SLURM_VERSION $EXTRA_VARS .
     last_run=$(jq -r '.last_run_uuid' manifest.json)
     publish_image=$(jq -r --arg last_run_uuid "$last_run" '.builds[] | select(.packer_run_uuid == $last_run_uuid) | .artifact_id' manifest.json)
+    echo "Modify image description"
+    gcloud compute images update $publish_image --description="Public Slurm image based on the $IMAGE image" --project="$SLURM_GCP_PROJECT"
     echo "generated image \"$publish_image\""
     echo $publish_image >> $image_list_file
     #Add permissions only to Google testers
