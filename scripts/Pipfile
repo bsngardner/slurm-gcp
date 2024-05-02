@@ -10,7 +10,7 @@ addict = "*"
 google-api-python-client = "*"
 google-cloud-bigquery = "*"
 google-cloud-storage = "*"
-ipython = "<7.17"
+ipython = "*"
 more-executors = "*"
 prometheus-client = "*"
 
@@ -19,4 +19,4 @@ prometheus-client = "*"
 [requires]
 # Supports: python >= 3.6
 # REF: https://github.com/pypa/pipenv/issues/1050
-python_version = "3"
+python_version = "3.8"

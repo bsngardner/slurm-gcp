@@ -40,9 +40,13 @@ common_packages:
 - intltool
 - jna
 - jq
+- libnfs
+- libnfs-devel
+- libnfs-utils
 - libtool
 - ltrace
 - make
+- nfs-utils
 - openssl-devel
 - patchutils
 - pciutils
@@ -55,6 +59,8 @@ common_packages:
 - pkgconf-m4
 - pkgconf-pkg-config
 - python3
+- python3-devel
+- python38-devel
 - redhat-rpm-config
 - rpm-build
 - rpm-sign

@@ -15,9 +15,12 @@
 # limitations under the License.
 
 import argparse
+from contextlib import closing
+from hashlib import sha256
 import logging
 import os
 import re
+import secrets
 import shutil
 import subprocess
 import sys
@@ -30,6 +33,7 @@ from itertools import chain
 from pathlib import Path
 
 from addict import Dict as NSDict
+import libnfs
 
 import util
 from util import (
@@ -482,6 +486,35 @@ def munge_mount_handler():
     shutil.rmtree(local_mount)
 
 
+def copy_slurm_key():
+    slurm_key = slurmdirs.etc / "slurm.key"
+    if slurm_key.exists():
+        log.info("Slurm key already exists, skipping key copy")
+        return
+    slurm_key.parent.mkdirp()
+    slurm_key.touch()
+
+    slurm_key.chmod(stat.S_IRUSR)
+    shutil.chown(slurm_key, user="slurm", group="slurm")
+
+    timeout = 60
+    for retry, wait in enumerate(util.backoff_delay(0.5, timeout), 1):
+        try:
+            nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
+            with closing(nfs.open("/slurm.key", mode="rb")) as keyfile:
+                key = keyfile.read()
+                slurm_key.write_bytes(key)
+                digest = sha256(key).hexdigest()
+                del key
+            log.info(f"Copied slurm_key (sha256: {digest})")
+            break
+        except FileNotFoundError:
+            log.warning(f"No slurm.key found, retrying ({retry})")
+            time.sleep(wait)
+    else:
+        log.warning("No slurm.key found, giving up")
+
+
 def setup_nfs_exports():
     """nfs export all needed directories"""
     # The controller only needs to set up exports for cluster-internal mounts
@@ -496,6 +529,17 @@ def setup_nfs_exports():
                 "local_mount": Path(f"{dirs.munge}_tmp"),
                 "fs_type": cfg.munge_mount.fs_type,
                 "mount_options": cfg.munge_mount.mount_options,
+            }
+        )
+    )
+    mounts.append(
+        NSDict(
+            {
+                "server_ip": lkp.control_host_addr,
+                "remote_mount": slurmdirs.etc,
+                "local_mount": Path("slurm_key_tmp"),
+                "fs_type": "nfs",
+                "mount_options": "",
             }
         )
     )
@@ -576,6 +620,19 @@ def setup_munge_key():
     shutil.chown(munge_key, user="munge", group="munge")
     os.chmod(munge_key, stat.S_IRUSR)
     run("systemctl restart munge", timeout=30)
+
+
+def setup_slurm_key():
+    slurm_key = slurmdirs.etc / "slurm.key"
+
+    if slurm_key.exists():
+        log.info("Slurm key already exists, skipping key generation")
+    else:
+        slurm_key.parent.mkdirp()
+        slurm_key.touch()
+        slurm_key.write_bytes(secrets.token_bytes(1024))
+    slurm_key.chmod(stat.S_IRUSR)
+    shutil.chown(slurm_key, user="slurm", group="slurm")
 
 
 def setup_nss_slurm():
@@ -699,6 +756,7 @@ def setup_controller(args):
 
     setup_jwt_key()
     setup_munge_key()
+    setup_slurm_key()
     setup_sudoers()
 
     if cfg.controller_secondary_disk:
@@ -770,6 +828,7 @@ def setup_login(args):
     install_custom_scripts()
 
     setup_network_storage()
+    copy_slurm_key()
     # setup_slurmd_cronjob()
     setup_sudoers()
     run("systemctl restart munge")
@@ -831,6 +890,7 @@ Restart=on-failure
 
     setup_nss_slurm()
     setup_network_storage()
+    copy_slurm_key()
 
     has_gpu = run("lspci | grep --ignore-case 'NVIDIA' | wc -l", shell=True).returncode
     if has_gpu:
