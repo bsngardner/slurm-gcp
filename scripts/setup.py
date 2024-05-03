@@ -684,7 +684,7 @@ def configure_mysql():
             """
 [mysqld]
 bind-address=127.0.0.1
-innodb_buffer_pool_size=1024M
+innodb_buffer_pool_size=4096M
 innodb_log_file_size=64M
 innodb_lock_wait_timeout=900
 """
