@@ -898,7 +898,7 @@ Restart=on-failure
 
     run_custom_scripts()
 
-    setup_slurmd_cronjob()
+    # setup_slurmd_cronjob()
     setup_sudoers()
 
     run("systemctl restart munge", timeout=30)
