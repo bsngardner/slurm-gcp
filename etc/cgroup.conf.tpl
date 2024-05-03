@@ -1,7 +1,7 @@
 # cgroup.conf
 # https://slurm.schedmd.com/cgroup.conf.html
 
-CgroupAutomount=no
+#CgroupAutomount=no
 #CgroupMountpoint=/sys/fs/cgroup
 ConstrainCores=yes
 ConstrainRamSpace=yes
