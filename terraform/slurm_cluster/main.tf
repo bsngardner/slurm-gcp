@@ -95,6 +95,7 @@ module "slurm_files" {
   bucket_dir                         = var.bucket_dir
   bucket_name                        = var.create_bucket ? module.bucket[0].name : var.bucket_name
   cgroup_conf_tpl                    = var.cgroup_conf_tpl
+  slurm_auth                         = var.slurm_auth
   cloud_parameters                   = var.cloud_parameters
   cloudsql_secret                    = try(module.slurm_controller_instance[0].cloudsql_secret, null)
   controller_startup_scripts         = var.controller_startup_scripts

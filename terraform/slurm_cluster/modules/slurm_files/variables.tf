@@ -285,6 +285,12 @@ variable "partitions" {
   }
 }
 
+variable "slurm_auth" {
+  description = "slurm auth plugin"
+  type        = string
+  default     = "munge"
+}
+
 variable "cloud_parameters" {
   description = "cloud.conf options."
   type = object({

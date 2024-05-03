@@ -63,6 +63,7 @@ locals {
     munge_mount                        = local.munge_mount
 
     # slurm conf
+    slurm_auth       = var.slurm_auth
     prolog_scripts   = [for k, v in google_storage_bucket_object.prolog_scripts : k]
     epilog_scripts   = [for k, v in google_storage_bucket_object.epilog_scripts : k]
     cloud_parameters = var.cloud_parameters

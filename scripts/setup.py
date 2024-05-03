@@ -755,8 +755,10 @@ def setup_controller(args):
     install_jobsubmit_lua()
 
     setup_jwt_key()
-    setup_munge_key()
-    setup_slurm_key()
+    if cfg.slurm_auth == "slurm":
+        setup_slurm_key()
+    else:
+        setup_munge_key()
     setup_sudoers()
 
     if cfg.controller_secondary_disk:
@@ -828,7 +830,8 @@ def setup_login(args):
     install_custom_scripts()
 
     setup_network_storage()
-    copy_slurm_key()
+    if cfg.slurm_auth == "slurm":
+        copy_slurm_key()
     # setup_slurmd_cronjob()
     setup_sudoers()
     run("systemctl restart munge")
@@ -890,7 +893,8 @@ Restart=on-failure
 
     setup_nss_slurm()
     setup_network_storage()
-    copy_slurm_key()
+    if cfg.slurm_auth == "slurm":
+        copy_slurm_key()
 
     has_gpu = run("lspci | grep --ignore-case 'NVIDIA' | wc -l", shell=True).returncode
     if has_gpu:

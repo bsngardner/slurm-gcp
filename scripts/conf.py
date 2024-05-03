@@ -349,6 +349,7 @@ def install_slurm_conf(lkp=lkp):
         "slurmlog": dirs.log,
         "state_save": slurmdirs.state,
         "mpi_default": mpi_default,
+        "slurm_auth": cfg.slurm_auth or "munge",
     }
     conf_resp = blob_get("slurm-tpl-slurm-conf").download_as_text()
     conf = conf_resp.format(**conf_options)
@@ -370,6 +371,7 @@ def install_slurmdbd_conf(lkp=lkp):
             "db_pass": '""',
             "db_host": "localhost",
             "db_port": "3306",
+            "slurm_auth": cfg.slurm_auth or "munge",
         }
     )
     if lkp.cfg.cloudsql_secret:
