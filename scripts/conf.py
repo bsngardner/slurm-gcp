@@ -182,7 +182,7 @@ def nodeset_lines(nodeset, lkp=lkp):
     lines = [node_def]
     # static or dynamic could be None, but Nones are filtered out of the lines
     multiplicity = nodeset.multiplicity or 1
-    ports = "{}-{}".format(*util.node_range(multiplicity, start=6818))
+    ports = "{}-{}".format(*util.node_range(multiplicity, start=6820))
 
     lines.extend(
         dict_to_conf(
@@ -224,14 +224,16 @@ def nodeset_tpu_lines(nodeset, lkp=lkp):
     dynamic = lkp.nodeset_dynamic_nodelist(nodeset)
     # static or dynamic could be None, but Nones are filtered out of the lines
     lines.extend(
-        dict_to_conf(
-            {
-                "NodeName": nodelist,
-                "State": "CLOUD",
-            }
+        (
+            dict_to_conf(
+                {
+                    "NodeName": nodelist,
+                    "State": "CLOUD",
+                }
+            )
+            if nodelist is not None
+            else None
         )
-        if nodelist is not None
-        else None
         for nodelist in [static, dynamic]
     )
     lines.append(
@@ -282,9 +284,9 @@ def partitionlines(partition, lkp=lkp):
         "State": "UP",
         "DefMemPerCPU": defmem,
         "SuspendTime": 300,
-        "Oversubscribe": "Exclusive"
-        if partition.enable_job_exclusive or part_is_tpu
-        else None,
+        "Oversubscribe": (
+            "Exclusive" if partition.enable_job_exclusive or part_is_tpu else None
+        ),
         "PowerDownOnIdle": "YES" if partition.enable_job_exclusive else None,
         **partition.partition_conf,
     }
@@ -439,7 +441,7 @@ def gen_cloud_gres_conf(lkp=lkp):
             {
                 "NodeName": names,
                 "Name": "gpu",
-                "File": "/dev/nvidia{}".format(f"[0-{i-1}]" if i > 1 else "0"),
+                "File": "/dev/nvidia{}".format(f"[0-{i - 1}]" if i > 1 else "0"),
             }
         )
         for i, names in gpu_nodes.items()
