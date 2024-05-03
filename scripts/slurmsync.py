@@ -191,22 +191,20 @@ def find_node_status(nodename):
     state = lkp.slurm_node(nodename)
     if lkp.node_is_tpu(nodename):
         return _find_tpu_node_status(nodename, state)
-    inst = lkp.instance(nodename)
+
+    nodeset = lkp.node_nodeset(nodename)
+    index = lkp.node_index(nodename)
+    if nodeset.multiplicity > 1 and index % nodeset.multiplicity != 0:
+        base_index = index - (index % nodeset.multiplicity)
+        base_node = f"{lkp.node_prefix(nodename)}-{base_index}"
+        inst = lkp.instance(base_node)
+    else:
+        inst = lkp.instance(nodename)
     power_flags = frozenset(
         ("POWER_DOWN", "POWERING_UP", "POWERING_DOWN", "POWERED_DOWN")
     ) & (state.flags if state is not None else set())
+
     if inst is None:
-        nodeset = lkp.node_nodeset(nodename)
-        index = lkp.node_index(nodename)
-        if (
-            nodeset.multiplicity > 1
-            and index % nodeset.multiplicity != 0
-            and nodename in find_node_status.static_nodeset
-        ):
-            if "POWERED_DOWN" in state.flags:
-                return NodeStatus.resume
-            else:
-                return NodeStatus.unchanged
         if "POWERING_UP" in state.flags:
             return NodeStatus.unchanged
         if state.base == "DOWN" and "POWERED_DOWN" in state.flags:
@@ -398,7 +396,7 @@ def sync_slurm():
         )
     )
     log.debug(
-        f"reconciling {len(compute_instances)} ({len(all_nodes)-len(compute_instances)}) GCP instances and {len(slurm_nodes)} Slurm nodes ({len(all_nodes)-len(slurm_nodes)})."
+        f"reconciling {len(compute_instances)} ({len(all_nodes) - len(compute_instances)}) GCP instances and {len(slurm_nodes)} Slurm nodes ({len(all_nodes) - len(slurm_nodes)})."
     )
     node_statuses = {
         k: list(v) for k, v in util.groupby_unsorted(all_nodes, find_node_status)
