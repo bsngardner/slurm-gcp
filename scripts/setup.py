@@ -593,22 +593,6 @@ def setup_jwt_key():
     util.chown_slurm(jwt_key, mode=0o400)
 
 
-def setup_slurmd_cronjob():
-    """Create cronjob for keeping slurmd service up"""
-    run(
-        "crontab -u root -",
-        input=(
-            "*/2 * * * * "
-            "if [ `systemctl status slurmd | grep -c inactive` -gt 0 ]; then "
-            "mount -a; "
-            "systemctl restart munge; "
-            "systemctl restart slurmd; "
-            "fi\n"
-        ),
-        timeout=30,
-    )
-
-
 def setup_munge_key():
     munge_key = Path(dirs.munge / "munge.key")
 
@@ -832,7 +816,6 @@ def setup_login(args):
     setup_network_storage()
     if cfg.slurm_auth == "slurm":
         copy_slurm_key()
-    # setup_slurmd_cronjob()
     setup_sudoers()
     run("systemctl restart munge")
     run("systemctl enable slurmd", timeout=30)
