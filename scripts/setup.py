@@ -374,7 +374,8 @@ def setup_network_storage():
             f.write("\n")
 
     mount_fstab(local_mounts(mounts))
-    munge_mount_handler()
+    if cfg.slurm_auth != "slurm":
+        munge_mount_handler()
 
 
 def mount_fstab(mounts):
@@ -783,7 +784,8 @@ def setup_controller(args):
     run("systemctl enable --now slurmcmd.timer", timeout=30)
 
     log.info("Check status of cluster services")
-    run("systemctl status munge", timeout=30)
+    if cfg.slurm_auth != "slurm":
+        run("systemctl status munge", timeout=30)
     run("systemctl status slurmdbd", timeout=30)
     run("systemctl status slurmctld", timeout=30)
     # run("systemctl status slurmrestd", timeout=30)
@@ -817,7 +819,9 @@ def setup_login(args):
     if cfg.slurm_auth == "slurm":
         copy_slurm_key()
     setup_sudoers()
-    run("systemctl restart munge")
+
+    if cfg.slurm_auth != "slurm":
+        run("systemctl restart munge")
     run("systemctl enable slurmd", timeout=30)
     run("systemctl restart slurmd", timeout=30)
     run("systemctl enable --now slurmcmd.timer", timeout=30)
@@ -825,7 +829,8 @@ def setup_login(args):
     run_custom_scripts()
 
     log.info("Check status of cluster services")
-    run("systemctl status munge", timeout=30)
+    if cfg.slurm_auth != "slurm":
+        run("systemctl status munge", timeout=30)
     run("systemctl status slurmd", timeout=30)
 
     log.info("Done setting up login")
@@ -888,7 +893,8 @@ Restart=on-failure
     # setup_slurmd_cronjob()
     setup_sudoers()
 
-    run("systemctl restart munge", timeout=30)
+    if cfg.slurm_auth != "slurm":
+        run("systemctl restart munge", timeout=30)
 
     if multiplicity > 1 and lkp.node_is_static():
         index = lkp.node_index()
@@ -906,7 +912,8 @@ Restart=on-failure
     run("systemctl enable --now slurmcmd.timer", timeout=30)
 
     log.info("Check status of cluster services")
-    run("systemctl status munge", timeout=30)
+    if cfg.slurm_auth != "slurm":
+        run("systemctl status munge", timeout=30)
 
     log.info("Done setting up compute")
 
