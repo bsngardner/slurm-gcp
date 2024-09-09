@@ -771,7 +771,7 @@ def setup_controller(args):
         result.check_returncode()  # will raise error
 
     run("systemctl enable slurmctld", timeout=30)
-    run("systemctl restart slurmctld", timeout=30)
+    # run("systemctl restart slurmctld", timeout=30)
 
     # run("systemctl enable slurmrestd", timeout=30)
     # run("systemctl restart slurmrestd", timeout=30)
@@ -790,7 +790,10 @@ def setup_controller(args):
     run("systemctl status slurmctld", timeout=30)
     # run("systemctl status slurmrestd", timeout=30)
 
+    slurmsync.reconfigure_slurm()
     slurmsync.sync_slurm()
+    # slurmsync.sync_placement_groups()
+
     run("systemctl enable slurm_load_bq.timer", timeout=30)
     run("systemctl start slurm_load_bq.timer", timeout=30)
     run("systemctl status slurm_load_bq.timer", timeout=30)
