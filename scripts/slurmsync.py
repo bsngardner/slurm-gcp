@@ -93,7 +93,25 @@ def start_instance_op(inst, project=None):
 
 
 def start_instances(node_list):
+    original = set(node_list)
+    node_list = list(
+        chain.from_iterable(
+            (
+                (
+                    node
+                    for node in nodes
+                    if lkp.node_index(node) % lkp.cfg.nodeset[ns].multiplicity == 0
+                )
+                if lkp.cfg.nodeset[ns].multiplicity > 1
+                else iter(nodes)
+            )
+            for ns, nodes in util.groupby_unsorted(node_list, lkp.node_nodeset_name)
+        )
+    )
     log.info("{} instances to start ({})".format(len(node_list), ",".join(node_list)))
+    skip = list(set(node_list) - original)
+    if skip:
+        log.info(f"skipped {len(skip)} nodes due to multiplicity ({','.join(skip)})")
 
     normal, tpu_nodes = separate(lkp.node_is_tpu, node_list)
     invalid, valid = separate(lambda inst: bool(lkp.instance), normal)
