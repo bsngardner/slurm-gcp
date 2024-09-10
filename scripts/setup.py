@@ -787,12 +787,12 @@ def setup_controller(args):
     if cfg.slurm_auth != "slurm":
         run("systemctl status munge", timeout=30)
     run("systemctl status slurmdbd", timeout=30)
-    run("systemctl status slurmctld", timeout=30)
     # run("systemctl status slurmrestd", timeout=30)
 
     slurmsync.reconfigure_slurm()
     slurmsync.sync_slurm()
     # slurmsync.sync_placement_groups()
+    run("systemctl status slurmctld", timeout=30)
 
     run("systemctl enable slurm_load_bq.timer", timeout=30)
     run("systemctl start slurm_load_bq.timer", timeout=30)
