@@ -100,7 +100,7 @@ def start_instances(node_list):
                 (
                     node
                     for node in nodes
-                    if lkp.node_index(node) % lkp.cfg.nodeset[ns].multiplicity == 0
+                    if lkp.node_index(node) // lkp.cfg.nodeset[ns].multiplicity == 0
                 )
                 if lkp.cfg.nodeset[ns].multiplicity > 1
                 else iter(nodes)
@@ -212,8 +212,8 @@ def find_node_status(nodename):
 
     nodeset = lkp.node_nodeset(nodename)
     index = lkp.node_index(nodename)
-    if nodeset.multiplicity > 1 and index % nodeset.multiplicity != 0:
-        base_index = index - (index % nodeset.multiplicity)
+    if nodeset.multiplicity > 1 and index // nodeset.multiplicity > 0:
+        base_index = index % nodeset.multiplicity
         base_node = f"{lkp.node_prefix(nodename)}-{base_index}"
         inst = lkp.instance(base_node)
     else:

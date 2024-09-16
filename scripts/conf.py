@@ -149,9 +149,13 @@ def split_node_groups(nodeset):
     if multiplicity == 1:
         yield None, lkp.nodeset_static_nodelist(nodeset), "dynamic"
     else:
-        for start, end in split_range(multiplicity, *lkp.nodeset_static_range(nodeset)):
+        _, end = lkp.nodeset_static_range(nodeset)
+        for start in range(multiplicity):
+            indexes = range(start, end + 1, multiplicity)
             hostname = lkp.nodeset_range_nodelist(nodeset, start, start)
-            nodelist = lkp.nodeset_range_nodelist(nodeset, start, end)
+            nodelist = ",".join(
+                lkp.nodeset_range_nodelist(nodeset, i, i) for i in indexes
+            )
             yield hostname, nodelist, "static"
     yield None, lkp.nodeset_dynamic_nodelist(nodeset), "dynamic"
 

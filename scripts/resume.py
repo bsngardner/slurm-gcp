@@ -660,7 +660,7 @@ def collapse_multiple_nodes(nodes):
         for node in gnodes:
             if lkp.node_is_static(node):
                 index = lkp.node_index(node)
-                primary = index - index % multiplicity
+                primary = index % multiplicity
                 filtered_nodes.add(
                     lkp.nodeset_range_nodelist(nodeset, primary, primary)
                 )
