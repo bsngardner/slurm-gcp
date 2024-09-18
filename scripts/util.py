@@ -385,6 +385,9 @@ def load_config_data(config):
     cfg.extra_logging_flags = NSDict(
         {flag: cfg.extra_logging_flags.get(flag, False) for flag in logging_flags}
     )
+    for ns in cfg.nodeset.values():
+        ns.vmcount, rem = divmod(ns.node_count_static, ns.multiplicity or 1)
+        assert rem == 0
     return cfg
 
 
@@ -407,9 +410,6 @@ def new_config(config):
             netstore.server_ip is None or netstore.server_ip == "$controller"
         ):
             netstore.server_ip = cfg.slurm_control_host
-    for ns in cfg.nodeset:
-        ns.vmcount, rem = divmod(ns.static_node_count, ns.multiplicity or 1)
-        assert rem == 0
     return cfg
 
 
@@ -438,7 +438,8 @@ def load_config_file(path):
     except FileNotFoundError:
         log.warning(f"config file not found: {path}")
         return NSDict()
-    return load_config_data(content)
+    cfg = load_config_data(content)
+    return cfg
 
 
 def save_config(cfg, path):
