@@ -407,6 +407,9 @@ def new_config(config):
             netstore.server_ip is None or netstore.server_ip == "$controller"
         ):
             netstore.server_ip = cfg.slurm_control_host
+    for ns in cfg.nodeset:
+        ns.vmcount, rem = divmod(ns.static_node_count, ns.multiplicity or 1)
+        assert rem == 0
     return cfg
 
 

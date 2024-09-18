@@ -901,9 +901,9 @@ Restart=on-failure
 
     if multiplicity > 1 and lkp.node_is_static():
         index = lkp.node_index()
-        assert index < multiplicity
+        assert index < nodeset.vmcount
         _, end = lkp.nodeset_static_range(nodeset)
-        for i in range(index, end + 1, multiplicity):
+        for i in range(index, end + 1, nodeset.vmcount):
             nodename = lkp.nodeset_range_nodelist(nodeset, i, i)
             log.info(f"starting slurmd@{nodename}")
             run(f"systemctl enable slurmd@{nodename}", timeout=30)
