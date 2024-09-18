@@ -212,7 +212,7 @@ def find_node_status(nodename):
 
     nodeset = lkp.node_nodeset(nodename)
     index = lkp.node_index(nodename)
-    base_index, vm_index = divmod(index, nodeset.vmcount)
+    vm_index, base_index = divmod(index, nodeset.vmcount)
     if nodeset.multiplicity > 1 and vm_index > 0:
         base_node = f"{lkp.node_prefix(nodename)}-{base_index}"
         inst = lkp.instance(base_node)

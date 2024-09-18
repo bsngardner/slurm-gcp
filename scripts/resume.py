@@ -660,7 +660,7 @@ def collapse_multiple_nodes(nodes):
         for node in gnodes:
             if lkp.node_is_static(node):
                 index = lkp.node_index(node)
-                base_index, vm_index = divmod(index, nodeset.vmcount)
+                vm_index, base_index = divmod(index, nodeset.vmcount)
                 filtered_nodes.add(
                     lkp.nodeset_range_nodelist(nodeset, base_index, base_index)
                 )
