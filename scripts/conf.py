@@ -150,8 +150,8 @@ def split_node_groups(nodeset):
         yield None, lkp.nodeset_static_nodelist(nodeset), "dynamic"
     else:
         _, end = lkp.nodeset_static_range(nodeset)
-        for start in range(multiplicity):
-            indexes = range(start, end + 1, multiplicity)
+        for start in range(nodeset.vmcount):
+            indexes = range(start, end + 1, nodeset.vmcount)
             hostname = lkp.nodeset_range_nodelist(nodeset, start, start)
             nodelist = ",".join(
                 lkp.nodeset_range_nodelist(nodeset, i, i) for i in indexes
@@ -186,7 +186,7 @@ def nodeset_lines(nodeset, lkp=lkp):
     lines = [node_def]
     # static or dynamic could be None, but Nones are filtered out of the lines
     multiplicity = nodeset.multiplicity or 1
-    ports = "{}-{}".format(*util.node_range(multiplicity, start=6820))
+    ports = "{}-{}".format(*util.node_range(nodeset.vmcount, start=6820))
 
     lines.extend(
         dict_to_conf(
