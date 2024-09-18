@@ -186,7 +186,7 @@ def nodeset_lines(nodeset, lkp=lkp):
     lines = [node_def]
     # static or dynamic could be None, but Nones are filtered out of the lines
     multiplicity = nodeset.multiplicity or 1
-    ports = "{}-{}".format(*util.node_range(nodeset.vmcount, start=6820))
+    ports = "{}-{}".format(*util.node_range(nodeset.multiplicity, start=6820))
 
     lines.extend(
         dict_to_conf(
