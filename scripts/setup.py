@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S /bin/sh -c 'exec $(dirname "$0")/python.sh $0 $@'
 
 # Copyright (C) SchedMD LLC.
 #
