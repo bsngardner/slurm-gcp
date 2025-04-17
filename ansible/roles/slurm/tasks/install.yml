@@ -75,7 +75,7 @@
 
 - name: Make Install Slurm
   shell:
-    cmd: python3.8 {{ paths.build }}/makepy/make.py -a
+    cmd: python3.8 {{ paths.build }}/makepy/make.py -a -e etc
     chdir: '{{slurm_paths.build}}'
 
 
