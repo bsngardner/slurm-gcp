@@ -70,6 +70,12 @@ service_account_scopes = [
 # network_project_id = "<NETWORK_PROJECT_ID>"
 # subnetwork = "<SUBNETWORK_ID>"
 
+# install_cuda = true
+# nvidia_version = "latest"
+# install_ompi = true
+# install_lustre = true
+# install_gcsfuse = true
+
 # add extra verbosity arguments to ensure stdout/stderr appear in output
 extra_ansible_provisioners = [
   #  {
