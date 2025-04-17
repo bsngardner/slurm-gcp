@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Clone slurm-makepy
+  ansible.builtin.git:
+    repo: "https://gitlab.com/bsngardner/slurm-makepy.git"
+    dest: "{{paths.build}}/makepy"
+    depth: 1
+    single_branch: true
+
 - name: Slurm From Tarball
   block:
   - name: Download Tarball
@@ -56,15 +63,21 @@
       > /dev/null
     chdir: '{{slurm_paths.build}}'
 
+# - name: Make Install Slurm
+#   shell:
+#     cmd: make --jobs install > /dev/null
+#     chdir: '{{slurm_paths.build}}'
+
+# - name: Make Install Slurm Contribs
+#   shell:
+#     cmd: make --jobs install > /dev/null
+#     chdir: '{{slurm_paths.build}}/contribs'
+
 - name: Make Install Slurm
   shell:
-    cmd: make --jobs install > /dev/null
+    cmd: "python3.8 {{ paths.build }}/makepy/make.py -a"
     chdir: '{{slurm_paths.build}}'
 
-- name: Make Install Slurm Contribs
-  shell:
-    cmd: make --jobs install > /dev/null
-    chdir: '{{slurm_paths.build}}/contribs'
 
 - name: Clean build dir
   ansible.builtin.file:

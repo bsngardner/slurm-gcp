@@ -22,24 +22,38 @@
   - '{{ ansible_os_family|lower }}-{{ ansible_distribution_version }}.yml'
   - '{{ ansible_os_family|lower }}-{{ ansible_distribution_major_version }}.yml'
   - '{{ ansible_os_family|lower }}.yml'
+# - name: Install Pip Packages
+#   pip:
+#     requirements: '{{ requirements_file.results[0].dest }}'
+#     extra_args: --upgrade --ignore-installed
+#     executable: pip3
+#     state: present
 
-- name: Install Packages
-  package:
-    name: '{{python_packages}}'
-    state: present
-
-- name: update alternatives to python38
-  shell:
-    cmd: alternatives --set python3 /usr/bin/python3.8
-  when: python38_installed
-
-- name: Upgrade Pip
-  pip:
+- name: uninstall python3
+  ansible.builtin.package:
     name:
-    - pip
-    extra_args: --upgrade
-    executable: pip3
-    state: present
+    - python3
+    - python38
+    - python38-pip-wheel
+    state: absent
+
+- name: remove leftover pip
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+  - /usr/local/bin/pip
+  - /usr/local/bin/pip3
+  - /usr/local/bin/pip3.8
+  - /usr/local/bin/pip3.10
+
+- name: install python311
+  ansible.builtin.package:
+    name:
+    - python311
+    - python3.11-pip
+    - python3.11-devel
+    state: latest
 
 - name: Copy Pip Requirements File
   copy:
@@ -54,13 +68,39 @@
   - '{{ ansible_os_family|lower }}_requirements.txt'
   register: requirements_file
 
-- name: Install pyyaml workaround
-  shell:
-    cmd: pip3 install "Cython<3.0" pyyaml --no-build-isolation
-
-- name: Install Pip Packages
+- name: Install uv pip
   pip:
-    requirements: '{{ requirements_file.results[0].dest }}'
-    extra_args: --upgrade --ignore-installed
+    name: uv
+    state: present
+    executable: pip3
+
+- name: update alternatives to python311
+  shell:
+    cmd: alternatives --set python3 /usr/bin/python3.11
+
+- name: Upgrade Pip
+  pip:
+    name:
+    - pip
+    - uv
+    extra_args: --upgrade
     executable: pip3
     state: present
+
+# - name: Install pyyaml workaround
+#   shell:
+#     cmd: pip3 install "Cython<3.0" pyyaml --no-build-isolation
+
+- name: Install Pip Packages
+  shell:
+    chdir: /slurm/scripts
+    cmd: |
+      python3 -m uv venv
+      python3 -m uv pip install --upgrade -r {{ requirements_file.results[0].dest }}
+
+- name: Install virtual env
+  shell:
+    chdir: '{{slurm_paths.scripts}}'
+    cmd: |
+      python3 -m uv venv
+      python3 -m uv sync -p 3.11
