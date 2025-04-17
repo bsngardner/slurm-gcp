@@ -85,6 +85,7 @@
   - lmod
   - slurm
   - slurmcmd
+  - python
   - role: ompi
     when: install_ompi
   - role: lustre
@@ -99,9 +100,8 @@
     when:
     - ansible_architecture == "x86_64"
   - logrotate
-  - python
   - role: ldap
-    when: 
-      - ansible_os_family != 'Debian'
-      - install_ldap
+    when:
+    - ansible_os_family != 'Debian'
+    - install_ldap
   - scripts
