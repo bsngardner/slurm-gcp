@@ -15,8 +15,8 @@
 
 - name: Clone slurm-makepy
   ansible.builtin.git:
-    repo: "https://gitlab.com/bsngardner/slurm-makepy.git"
-    dest: "{{paths.build}}/makepy"
+    repo: https://gitlab.com/bsngardner/slurm-makepy.git
+    dest: '{{paths.build}}/makepy'
     depth: 1
     single_branch: true
 
@@ -75,7 +75,7 @@
 
 - name: Make Install Slurm
   shell:
-    cmd: "python3.8 {{ paths.build }}/makepy/make.py -a"
+    cmd: python3.8 {{ paths.build }}/makepy/make.py -a
     chdir: '{{slurm_paths.build}}'
 
 

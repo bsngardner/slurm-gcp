@@ -39,7 +39,7 @@
 
 - name: remove leftover pip
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: absent
   with_items:
   - /usr/local/bin/pip
