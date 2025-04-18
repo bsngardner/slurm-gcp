@@ -65,6 +65,7 @@
     mode: 0o755
   with_items:
   - python.sh
+  - pyproject.toml
   - conf.py
   - resume.py
   - setup.py
@@ -73,6 +74,13 @@
   - suspend.py
   - util.py
   - load_bq.py
+
+- name: Install virtual env
+  shell:
+    chdir: '{{slurm_paths.scripts}}'
+    cmd: |
+      python3 -m uv venv
+      python3 -m uv sync -p 3.11
 
 - name: Copy slurm_gcp_plugins
   copy:
