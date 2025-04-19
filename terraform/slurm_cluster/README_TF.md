@@ -33,7 +33,7 @@ limitations under the License.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_bucket"></a> [bucket](#module\_bucket) | terraform-google-modules/cloud-storage/google | ~> 3.0 |
+| <a name="module_bucket"></a> [bucket](#module\_bucket) | terraform-google-modules/cloud-storage/google | ~> 3 |
 | <a name="module_slurm_controller_hybrid"></a> [slurm\_controller\_hybrid](#module\_slurm\_controller\_hybrid) | ./modules/slurm_controller_hybrid | n/a |
 | <a name="module_slurm_controller_instance"></a> [slurm\_controller\_instance](#module\_slurm\_controller\_instance) | ./modules/slurm_controller_instance | n/a |
 | <a name="module_slurm_controller_template"></a> [slurm\_controller\_template](#module\_slurm\_controller\_template) | ./modules/slurm_instance_template | n/a |

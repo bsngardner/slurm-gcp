@@ -110,7 +110,7 @@ locals {
 
 module "firewall_rules" {
   source  = "terraform-google-modules/network/google//modules/firewall-rules"
-  version = "~> 4.0"
+  version = "~> 4"
 
   project_id   = var.project_id
   network_name = var.network_name

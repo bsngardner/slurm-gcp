@@ -20,7 +20,7 @@
 
 module "network" {
   source  = "terraform-google-modules/network/google"
-  version = "~> 4.0"
+  version = "~> 4, < 10.0"
 
   project_id                             = var.project_id
   description                            = var.description
@@ -45,7 +45,7 @@ module "network" {
 
 module "router" {
   source  = "terraform-google-modules/cloud-router/google"
-  version = "~> 1.0"
+  version = "~> 1"
 
   for_each = module.network.subnets
 
@@ -61,7 +61,7 @@ module "router" {
 
 module "nat" {
   source  = "terraform-google-modules/cloud-nat/google"
-  version = "~> 2.0"
+  version = "~> 2"
 
   for_each = module.router
 
