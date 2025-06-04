@@ -909,10 +909,29 @@ Restart=on-failure
             run(f"systemctl enable slurmd@{nodename}", timeout=30)
             run(f"systemctl restart slurmd@{nodename}", timeout=30)
             run(f"systemctl status slurmd@{nodename}", timeout=30)
+
+            run(
+                f"scp {cfg.slurm_control_host}:{slurmdirs.etc}/{nodename}_token.txt {slurmdirs.etc}/",
+                check=False,
+            )
     else:
         run("systemctl enable slurmd", timeout=30)
         run("systemctl restart slurmd", timeout=30)
         run("systemctl status slurmd", timeout=30)
+
+        run(
+            f"scp {cfg.slurm_control_host}:{slurmdirs.etc}/{lkp.hostname}_token.txt {slurmdirs.etc}/",
+            check=False,
+        )
+
+    run(
+        f"scp {cfg.slurm_control_host}:{slurmdirs.etc}/certmgr_get_node_token.sh {slurmdirs.etc}/",
+        check=False,
+    )
+    run(
+        f"scp {cfg.slurm_control_host}:{slurmdirs.etc}/certmgr_gen_csr.sh {slurmdirs.etc}/",
+        check=False,
+    )
 
     run("systemctl enable --now slurmcmd.timer", timeout=30)
 
