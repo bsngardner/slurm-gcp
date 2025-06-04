@@ -37,6 +37,7 @@ import libnfs
 
 import util
 from util import (
+    cd,
     run,
     separate,
     blob_list,
@@ -754,6 +755,22 @@ def setup_controller(args):
 
     if not cfg.cloudsql_secret:
         configure_mysql()
+
+    with cd(slurmdirs.etc):
+        run(
+            " ".join(
+                [
+                    "python3 tls_setup.py",
+                    f"--slurm-etc {slurmdirs.etc}",
+                    "--slurm-user slurm",
+                    "--slurmrestd-user slurm",
+                    f"--node-prefix {lkp.nodeset_prefix('nodes')}-",
+                    "--zero-indexed",
+                    f"--node-count {cfg.nodeset.nodes.node_count_static}",
+                    "--use-certmgr",
+                ]
+            )
+        )
 
     run("systemctl enable slurmdbd", timeout=30)
     run("systemctl restart slurmdbd", timeout=30)
