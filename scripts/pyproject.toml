@@ -10,6 +10,7 @@ dependencies = [
     "prometheus-client>=0.21.0",
     "pyyaml>=6.0",
     "requests>=2.32.0",
+    "python-hostlist>=2.0"
 ]
 description = "slurm-gcp for utmost"
 name = "slurm-gcp-utmost"

@@ -7,4 +7,5 @@ google-cloud-tpu~=1.10.0
 libnfs~=1.0
 more-executors~=2.0
 prometheus-client~=0.16
+python-hostlist~=2.0
 pyyaml~=6.0

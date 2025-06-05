@@ -15,5 +15,6 @@ ipython==9.1.0
 more-executors==2.11.4
 prometheus-client==0.21.1
 prompt-toolkit==3.0.51
+python-hostlist==2.2.1
 pyyaml==6.0.2
 requests==2.32.3

@@ -48,6 +48,7 @@ required_modules = [
     ("addict", "addict"),
     ("httplib2", "httplib2"),
     ("google.cloud.tpu_v2", "google-cloud-tpu"),
+    ("hostlist", "python-hostlist"),
 ]
 missing_imports = False
 can_tpu = True
@@ -81,6 +82,7 @@ from requests.exceptions import RequestException  # noqa: E402
 
 import yaml  # noqa: E402
 from addict import Dict as NSDict  # noqa: E402
+from hostlist import collect_hostlist, expand_hostlist  # noqa: E402
 
 optional_modules = [
     ("google.cloud.secretmanager", "google-cloud-secret-manager"),
@@ -778,14 +780,8 @@ def natural_sort(text):
 
 def to_hostlist(nodenames):
     """make hostlist from list of node names"""
-    # use tmp file because list could be large
-    tmp_file = tempfile.NamedTemporaryFile(mode="w+t", delete=False)
-    tmp_file.writelines("\n".join(sorted(nodenames, key=natural_sort)))
-    tmp_file.close()
-
-    hostlist = run(f"{lkp.scontrol} show hostlist {tmp_file.name}").stdout.rstrip()
+    hostlist = collect_hostlist(nodenames)
     log_hostlists.debug(f"hostlist({len(nodenames)}): {hostlist}".format(hostlist))
-    os.remove(tmp_file.name)
     return hostlist
 
 
@@ -821,7 +817,7 @@ def to_hostnames(nodelist):
         hostlist = nodelist
     else:
         hostlist = ",".join(nodelist)
-    hostnames = run(f"{lkp.scontrol} show hostnames {hostlist}").stdout.splitlines()
+    hostnames = expand_hostlist(hostlist)
     log_hostlists.debug(f"hostnames({len(hostnames)}) from {hostlist}")
     return hostnames
 
