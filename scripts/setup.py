@@ -740,6 +740,8 @@ def setup_controller(args):
     install_topology_conf()
     install_jobsubmit_lua()
 
+    run('ssh-keygen -b 2048 -t rsa -q -f $HOME/.ssh/id_rsa -N ""')
+    run("cp $HOME/.ssh/id_rsa.pub $HOME/.ssh/authorized_keys")
     setup_jwt_key()
     if cfg.slurm_auth == "slurm":
         setup_slurm_key()
