@@ -517,6 +517,34 @@ def copy_slurm_key():
         log.warning("No slurm.key found, giving up")
 
 
+def copy_node_tls_token():
+    token = slurmdirs.etc / f"{lkp.hostname}_token.txt"
+    if token.exists():
+        log.info(f"token {token} already exists, skipping copy")
+        return
+    token.parent.mkdirp()
+    token.touch()
+    token.chmod(stat.IRUSR)
+    shutil.chown(token, user="slurm", group="slurm")
+
+    timeout = 60
+    for retry, wait in enumerate(util.backoff_delay(0.5, timeout), 1):
+        try:
+            nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
+            with closing(nfs.open(f"/{token.name}", mode="rb")) as keyfile:
+                key = keyfile.read()
+                token.write_bytes(key)
+                digest = sha256(key).hexdigest()
+                del key
+            log.info(f"Copied node tls token (sha256: {digest})")
+            break
+        except FileNotFoundError:
+            log.warning(f"token {token} found, retrying ({retry})")
+            time.sleep(wait)
+    else:
+        log.warning("No tls token found on controller, giving up")
+
+
 def setup_nfs_exports():
     """nfs export all needed directories"""
     # The controller only needs to set up exports for cluster-internal mounts
@@ -740,12 +768,6 @@ def setup_controller(args):
     install_topology_conf()
     install_jobsubmit_lua()
 
-    pubfile = Path("/root/.ssh/id_rsa.pub")
-    privfile = Path("/root/.ssh/id_rsa")
-    pubfile.unlink(missing_ok=True)
-    privfile.unlink(missing_ok=True)
-    run(f'ssh-keygen -b 2048 -t rsa -q -f {privfile} -N ""')
-    run(f"cp {pubfile} /root/.ssh/authorized_keys")
     setup_jwt_key()
     if cfg.slurm_auth == "slurm":
         setup_slurm_key()
@@ -763,19 +785,17 @@ def setup_controller(args):
         configure_mysql()
 
     with cd(slurmdirs.etc):
-        run(
-            " ".join(
-                [
-                    "python3 tls_setup.py",
-                    f"--slurm-etc {slurmdirs.etc}",
-                    "--slurm-user slurm",
-                    "--slurmrestd-user slurm",
-                    f"--node-prefix {lkp.nodeset_prefix('nodes')}-",
-                    "--zero-indexed",
-                    f"--node-count {cfg.nodeset.nodes.node_count_static}",
-                    "--use-certmgr",
-                ]
-            )
+        import tls_setup
+
+        static, _ = lkp.cloud_nodes()
+        tls_setup.main(
+            [
+                f"--slurm-etc {slurmdirs.etc}",
+                "--slurm-user slurm",
+                "--slurmrestd-user slurm",
+                f"--nodes {static}",
+                "--use-certmgr",
+            ]
         )
 
     run("systemctl enable slurmdbd", timeout=30)
@@ -828,6 +848,24 @@ def setup_controller(args):
 def setup_login(args):
     """run login node setup"""
     log.info("Setting up login")
+    import tls_setup
+
+    tls_setup.main(
+        [
+            f"--slurm-etc {slurmdirs.etc}",
+            "--slurm-user slurm",
+            "--slurmrestd-user slurm",
+            f"--nodes {lkp.hostname}",
+            "--no-gen-certs",
+            "--use-certmgr",
+        ]
+    )
+    token_file = slurmdirs.etc / f"{lkp.hostname}_token.txt"
+    token = token_file.read_text()
+    nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
+    with closing(nfs.open("/node_token_list.txt", mode="a")) as token_list:
+        token_list.write(f"{lkp.hostname}: {token}\n")
+
     slurmctld_host = f"{lkp.control_host}"
     if lkp.control_addr:
         slurmctld_host = f"{lkp.control_host}({lkp.control_addr})"
