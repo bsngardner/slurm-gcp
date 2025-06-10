@@ -790,10 +790,14 @@ def setup_controller(args):
         static, _ = lkp.cloud_nodes()
         static = util.to_hostlist(static)
         tls_args = [
-            f"--slurm-etc {slurmdirs.etc}",
-            "--slurm-user slurm",
-            "--slurmrestd-user slurm",
-            f"--nodes {static}",
+            "--slurm-etc ",
+            f"{slurmdirs.etc}",
+            "--slurm-user",
+            "slurm",
+            "--slurmrestd-user",
+            "slurm",
+            "--nodes",
+            f"{static}",
             "--use-certmgr",
         ]
         log.debug("tls_setup {}".format(" ".join(tls_args)))
@@ -853,10 +857,14 @@ def setup_login(args):
 
     tls_setup.main(
         [
-            f"--slurm-etc {slurmdirs.etc}",
-            "--slurm-user slurm",
-            "--slurmrestd-user slurm",
-            f"--nodes {lkp.hostname}",
+            "--slurm-etc",
+            f"{slurmdirs.etc}",
+            "--slurm-user",
+            "slurm",
+            "--slurmrestd-user",
+            "slurm",
+            "--nodes",
+            f"{lkp.hostname}",
             "--no-gen-certs",
             "--use-certmgr",
         ]
