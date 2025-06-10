@@ -927,9 +927,18 @@ def setup_compute(args):
     if lkp.control_addr:
         slurmctld_host = f"{lkp.control_host}({lkp.control_addr})"
 
+    node_name = lkp.hostname
     nodeset = lkp.node_nodeset()
     multiplicity = nodeset.multiplicity or 1
     if multiplicity > 1 and lkp.node_is_static():
+        index = lkp.node_index()
+        assert index < nodeset.vmcount
+        _, end = lkp.nodeset_static_range(nodeset)
+        nodes = [
+            f"{lkp.node_prefix()}-{i}" for i in range(index, end + 1, nodeset.vmcount)
+        ]
+        nodelist = util.to_hostlist(nodes)
+        node_name = nodelist
         slurmd_options = []
 
         slurmd_service = Path("/usr/lib/systemd/system/slurmd.service")
@@ -973,7 +982,7 @@ Restart=on-failure
             "--slurmrestd-user",
             "slurm",
             "--nodes",
-            f"{lkp.hostname}",
+            f"{node_name}",
             "--gen-target",
             "slurmd",
         ]
@@ -1021,38 +1030,20 @@ Restart=on-failure
         run("systemctl restart munge", timeout=30)
 
     if multiplicity > 1 and lkp.node_is_static():
-        index = lkp.node_index()
-        assert index < nodeset.vmcount
-        _, end = lkp.nodeset_static_range(nodeset)
-        for i in range(index, end + 1, nodeset.vmcount):
-            nodename = lkp.nodeset_range_nodelist(nodeset, i, i)
+        for nodename in nodes:
             log.info(f"starting slurmd@{nodename}")
             run(f"systemctl enable slurmd@{nodename}", timeout=30)
             run(f"systemctl restart slurmd@{nodename}", timeout=30)
             run(f"systemctl status slurmd@{nodename}", timeout=30)
-
-            run(
-                f"scp {cfg.slurm_control_host}:{slurmdirs.etc}/{nodename}_token.txt {slurmdirs.etc}/",
-                check=False,
-            )
     else:
         run("systemctl enable slurmd", timeout=30)
         run("systemctl restart slurmd", timeout=30)
         run("systemctl status slurmd", timeout=30)
 
-        run(
-            f"scp {cfg.slurm_control_host}:{slurmdirs.etc}/{lkp.hostname}_token.txt {slurmdirs.etc}/",
-            check=False,
-        )
-
-    run(
-        f"scp {cfg.slurm_control_host}:{slurmdirs.etc}/certmgr_get_node_token.sh {slurmdirs.etc}/",
-        check=False,
-    )
-    run(
-        f"scp {cfg.slurm_control_host}:{slurmdirs.etc}/certmgr_gen_csr.sh {slurmdirs.etc}/",
-        check=False,
-    )
+    get_token_script = slurmdirs.etc / "certmgr_get_node_token.sh"
+    copy_from_controller(get_token_script, slurmdirs.etc, get_token_script.name)
+    gen_csr_script = slurmdirs.etc / "certmgr_gen_csr.sh"
+    copy_from_controller(gen_csr_script, slurmdirs.etc, gen_csr_script.name)
 
     run("systemctl enable --now slurmcmd.timer", timeout=30)
 
