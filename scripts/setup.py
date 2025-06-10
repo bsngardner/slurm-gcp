@@ -788,15 +788,16 @@ def setup_controller(args):
         import tls_setup
 
         static, _ = lkp.cloud_nodes()
-        tls_setup.main(
-            [
-                f"--slurm-etc {slurmdirs.etc}",
-                "--slurm-user slurm",
-                "--slurmrestd-user slurm",
-                f"--nodes {static}",
-                "--use-certmgr",
-            ]
-        )
+        static = util.to_hostlist(static)
+        tls_args = [
+            f"--slurm-etc {slurmdirs.etc}",
+            "--slurm-user slurm",
+            "--slurmrestd-user slurm",
+            f"--nodes {static}",
+            "--use-certmgr",
+        ]
+        log.debug("tls_setup {}".format(" ".join(tls_args)))
+        tls_setup.main(tls_args)
 
     run("systemctl enable slurmdbd", timeout=30)
     run("systemctl restart slurmdbd", timeout=30)
