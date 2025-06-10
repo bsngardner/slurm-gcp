@@ -867,13 +867,25 @@ def setup_login(args):
             "slurm",
             "--slurmrestd-user",
             "slurm",
-            "--nodes",
-            f"{lkp.hostname}",
             "--gen-target",
             "slurmd",
         ]
         if cfg.slurm_certmgr:
-            tls_args.append("--use-certmgr")
+            tls_args.extend(
+                [
+                    "--use-certmgr",
+                    "--nodes",
+                    f"{lkp.hostname}",
+                ]
+            )
+        else:
+            tls_args.extend(
+                [
+                    "--nodes",
+                    "slurmd",
+                ]
+            )
+
         tls_setup.main(tls_args)
         if cfg.slurm_certmgr:
             token_file = slurmdirs.etc / f"{lkp.hostname}_token.txt"
@@ -966,7 +978,20 @@ Restart=on-failure
             "slurmd",
         ]
         if cfg.slurm_certmgr:
-            tls_args.append("--use-certmgr")
+            tls_args.extend(
+                [
+                    "--use-certmgr",
+                    "--nodes",
+                    f"{lkp.hostname}",
+                ]
+            )
+        else:
+            tls_args.extend(
+                [
+                    "--nodes",
+                    "slurmd",
+                ]
+            )
         tls_setup.main(tls_args)
         if cfg.slurm_certmgr:
             token_file = slurmdirs.etc / f"{lkp.hostname}_token.txt"
