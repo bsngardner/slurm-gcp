@@ -93,8 +93,10 @@ limitations under the License.
 | <a name="input_prolog_scripts"></a> [prolog\_scripts](#input\_prolog\_scripts) | List of scripts to be used for Prolog. Programs for the slurmd to execute<br/>whenever it is asked to run a job step from a new job allocation.<br/>See https://slurm.schedmd.com/slurm.conf.html#OPT_Prolog. | <pre>list(object({<br/>    filename = string<br/>    content  = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_region"></a> [region](#input\_region) | The default region to place resources in. | `string` | n/a | yes |
 | <a name="input_slurm_auth"></a> [slurm\_auth](#input\_slurm\_auth) | slurm auth plugin | `string` | `"munge"` | no |
+| <a name="input_slurm_certmgr"></a> [slurm\_certmgr](#input\_slurm\_certmgr) | enable certmgr | `bool` | `false` | no |
 | <a name="input_slurm_cluster_name"></a> [slurm\_cluster\_name](#input\_slurm\_cluster\_name) | Cluster name, used for resource naming and slurm accounting. | `string` | n/a | yes |
 | <a name="input_slurm_conf_tpl"></a> [slurm\_conf\_tpl](#input\_slurm\_conf\_tpl) | Slurm slurm.conf template file path. | `string` | `null` | no |
+| <a name="input_slurm_tls"></a> [slurm\_tls](#input\_slurm\_tls) | enable TLS encryption | `bool` | `false` | no |
 | <a name="input_slurmdbd_conf_tpl"></a> [slurmdbd\_conf\_tpl](#input\_slurmdbd\_conf\_tpl) | Slurm slurmdbd.conf template file path. | `string` | `null` | no |
 
 ## Outputs

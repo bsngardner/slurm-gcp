@@ -99,12 +99,14 @@ No modules.
 | <a name="input_prolog_scripts"></a> [prolog\_scripts](#input\_prolog\_scripts) | List of scripts to be used for Prolog. Programs for the slurmd to execute<br/>whenever it is asked to run a job step from a new job allocation.<br/>See https://slurm.schedmd.com/slurm.conf.html#OPT_Prolog. | <pre>list(object({<br/>    filename = string<br/>    content  = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_slurm_auth"></a> [slurm\_auth](#input\_slurm\_auth) | slurm auth plugin | `string` | `"munge"` | no |
 | <a name="input_slurm_bin_dir"></a> [slurm\_bin\_dir](#input\_slurm\_bin\_dir) | Path to directory of Slurm binary commands (e.g. scontrol, sinfo). If 'null',<br/>then it will be assumed that binaries are in $PATH. | `string` | `null` | no |
+| <a name="input_slurm_certmgr"></a> [slurm\_certmgr](#input\_slurm\_certmgr) | enable certmgr | `bool` | `false` | no |
 | <a name="input_slurm_cluster_name"></a> [slurm\_cluster\_name](#input\_slurm\_cluster\_name) | The cluster name, used for resource naming and slurm accounting. | `string` | n/a | yes |
 | <a name="input_slurm_conf_tpl"></a> [slurm\_conf\_tpl](#input\_slurm\_conf\_tpl) | Slurm slurm.conf template file path. | `string` | `null` | no |
 | <a name="input_slurm_control_addr"></a> [slurm\_control\_addr](#input\_slurm\_control\_addr) | The IP address or a name by which the address can be identified.<br/><br/>This value is passed to slurm.conf such that:<br/>SlurmctldHost={var.slurm\_control\_host}\({var.slurm\_control\_addr}\)<br/><br/>See https://slurm.schedmd.com/slurm.conf.html#OPT_SlurmctldHost | `string` | `null` | no |
 | <a name="input_slurm_control_host"></a> [slurm\_control\_host](#input\_slurm\_control\_host) | The short, or long, hostname of the machine where Slurm control daemon is<br/>executed (i.e. the name returned by the command "hostname -s").<br/><br/>This value is passed to slurm.conf such that:<br/>SlurmctldHost={var.slurm\_control\_host}\({var.slurm\_control\_addr}\)<br/><br/>See https://slurm.schedmd.com/slurm.conf.html#OPT_SlurmctldHost | `string` | `null` | no |
 | <a name="input_slurm_control_host_port"></a> [slurm\_control\_host\_port](#input\_slurm\_control\_host\_port) | The port number that the Slurm controller, slurmctld, listens to for work.<br/><br/>See https://slurm.schedmd.com/slurm.conf.html#OPT_SlurmctldPort | `string` | `"6818"` | no |
 | <a name="input_slurm_log_dir"></a> [slurm\_log\_dir](#input\_slurm\_log\_dir) | Directory where Slurm logs to. | `string` | `"/var/log/slurm"` | no |
+| <a name="input_slurm_tls"></a> [slurm\_tls](#input\_slurm\_tls) | enable TLS encryption | `bool` | `false` | no |
 | <a name="input_slurmdbd_conf_tpl"></a> [slurmdbd\_conf\_tpl](#input\_slurmdbd\_conf\_tpl) | Slurm slurmdbd.conf template file path. | `string` | `null` | no |
 
 ## Outputs

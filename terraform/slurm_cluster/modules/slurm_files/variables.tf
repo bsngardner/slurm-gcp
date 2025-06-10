@@ -285,6 +285,18 @@ variable "partitions" {
   }
 }
 
+variable "slurm_certmgr" {
+  description = "enable certmgr"
+  type        = bool
+  default     = false
+}
+
+variable "slurm_tls" {
+  description = "enable TLS encryption"
+  type        = bool
+  default     = false
+}
+
 variable "slurm_auth" {
   description = "slurm auth plugin"
   type        = string

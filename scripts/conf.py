@@ -344,6 +344,25 @@ def install_slurm_conf(lkp=lkp):
     else:
         mpi_default = "none"
 
+    tls_conf = """
+TLSType=tls/s2n
+TLSParameters=\
+ctld_cert_file=/usr/local/etc/slurm/ctld_cert.pem,\
+ctld_cert_key_file=/usr/local/etc/slurm/ctld_cert_key.pem,\
+restd_cert_file=/usr/local/etc/slurm/restd_cert.pem,\
+restd_cert_key_file=/usr/local/etc/slurm/restd_cert_key.pem,\
+ca_cert_file=/usr/local/etc/slurm/ca_cert.pem
+"""
+    certmgr_conf = """
+CertmgrType=certmgr/script
+CertmgrParameters=\
+get_node_token_script=/usr/local/etc/slurm/certmgr_get_node_token.sh,\
+generate_csr_script=/usr/local/etc/slurm/certmgr_gen_csr.sh,\
+validate_node_script=/usr/local/etc/slurm/certmgr_validate_node.sh,\
+sign_csr_script=/usr/local/etc/slurm/certmgr_sign_csr.sh,\
+get_node_cert_key_script=/usr/local/etc/slurm/certmgr_get_node_key.sh
+"""
+
     conf_options = {
         "name": lkp.cfg.slurm_cluster_name,
         "control_addr": lkp.control_addr if lkp.control_addr else lkp.hostname_fqdn,
@@ -354,6 +373,8 @@ def install_slurm_conf(lkp=lkp):
         "state_save": slurmdirs.state,
         "mpi_default": mpi_default,
         "slurm_auth": cfg.slurm_auth or "munge",
+        "tls_conf": tls_conf if cfg.slurm_tls else "",
+        "certmgr_conf": certmgr_conf if cfg.slurm_certmgr else "",
     }
     conf_resp = blob_get("slurm-tpl-slurm-conf").download_as_text()
     conf = conf_resp.format(**conf_options)

@@ -488,61 +488,44 @@ def munge_mount_handler():
     shutil.rmtree(local_mount)
 
 
+def copy_from_controller(local_path: Path, mount_path: Path, file_path):
+    log.info(f"Copy {file_path} from controller:{mount_path} to {local_path}")
+    if local_path.exists():
+        log.info(f"{local_path} already exists, overwriting")
+        return
+    local_path.parent.mkdirp()
+    local_path.touch()
+
+    local_path.chmod(stat.S_IRUSR)
+    shutil.chown(local_path, user="slurm", group="slurm")
+
+    timeout = 60
+    for retry, wait in enumerate(util.backoff_delay(0.5, timeout), 1):
+        try:
+            nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{mount_path}")
+            with closing(nfs.open(f"/{file_path}", mode="rb")) as keyfile:
+                key = keyfile.read()
+                local_path.write_bytes(key)
+                digest = sha256(key).hexdigest()
+                del key
+            log.info(f"Copied {local_path} (sha256: {digest})")
+            break
+        except FileNotFoundError:
+            log.warning(f"{mount_path}/{file_path} not found, retrying ({retry})")
+            time.sleep(wait)
+    else:
+        log.warning(f"{mount_path}/{file_path} not found, giving up")
+
+
 def copy_slurm_key():
-    slurm_key = slurmdirs.etc / "slurm.key"
-    if slurm_key.exists():
-        log.info("Slurm key already exists, skipping key copy")
-        return
-    slurm_key.parent.mkdirp()
-    slurm_key.touch()
-
-    slurm_key.chmod(stat.S_IRUSR)
-    shutil.chown(slurm_key, user="slurm", group="slurm")
-
-    timeout = 60
-    for retry, wait in enumerate(util.backoff_delay(0.5, timeout), 1):
-        try:
-            nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
-            with closing(nfs.open("/slurm.key", mode="rb")) as keyfile:
-                key = keyfile.read()
-                slurm_key.write_bytes(key)
-                digest = sha256(key).hexdigest()
-                del key
-            log.info(f"Copied slurm_key (sha256: {digest})")
-            break
-        except FileNotFoundError:
-            log.warning(f"No slurm.key found, retrying ({retry})")
-            time.sleep(wait)
-    else:
-        log.warning("No slurm.key found, giving up")
+    copy_from_controller(slurmdirs.etc / "slurm.key", slurmdirs.etc, "slurm.key")
 
 
-def copy_node_tls_token():
+def copy_tls_certs():
+    copy_from_controller(slurmdirs.etc / "ca_cert.pem", slurmdirs.etc, "ca_cert.pem")
+
     token = slurmdirs.etc / f"{lkp.hostname}_token.txt"
-    if token.exists():
-        log.info(f"token {token} already exists, skipping copy")
-        return
-    token.parent.mkdirp()
-    token.touch()
-    token.chmod(stat.IRUSR)
-    shutil.chown(token, user="slurm", group="slurm")
-
-    timeout = 60
-    for retry, wait in enumerate(util.backoff_delay(0.5, timeout), 1):
-        try:
-            nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
-            with closing(nfs.open(f"/{token.name}", mode="rb")) as keyfile:
-                key = keyfile.read()
-                token.write_bytes(key)
-                digest = sha256(key).hexdigest()
-                del key
-            log.info(f"Copied node tls token (sha256: {digest})")
-            break
-        except FileNotFoundError:
-            log.warning(f"token {token} found, retrying ({retry})")
-            time.sleep(wait)
-    else:
-        log.warning("No tls token found on controller, giving up")
+    copy_from_controller(token, slurmdirs.etc, token.name)
 
 
 def setup_nfs_exports():
@@ -784,24 +767,25 @@ def setup_controller(args):
     if not cfg.cloudsql_secret:
         configure_mysql()
 
-    with cd(slurmdirs.etc):
-        import tls_setup
+    if cfg.slurm_tls:
+        with cd(slurmdirs.etc):
+            import tls_setup
 
-        static, _ = lkp.cloud_nodes()
-        static = util.to_hostlist(static)
-        tls_args = [
-            "--slurm-etc ",
-            f"{slurmdirs.etc}",
-            "--slurm-user",
-            "slurm",
-            "--slurmrestd-user",
-            "slurm",
-            "--nodes",
-            f"{static}",
-            "--use-certmgr",
-        ]
-        log.debug("tls_setup {}".format(" ".join(tls_args)))
-        tls_setup.main(tls_args)
+            static, _ = lkp.cloud_nodes()
+            static = util.to_hostlist(static)
+            tls_args = [
+                "--slurm-etc",
+                f"{slurmdirs.etc}",
+                "--slurm-user",
+                "slurm",
+                "--slurmrestd-user",
+                "slurm",
+                "--nodes",
+                f"{static}",
+                "--use-certmgr",
+            ]
+            log.debug("tls_setup {}".format(" ".join(tls_args)))
+            tls_setup.main(tls_args)
 
     run("systemctl enable slurmdbd", timeout=30)
     run("systemctl restart slurmdbd", timeout=30)
@@ -853,37 +837,43 @@ def setup_controller(args):
 def setup_login(args):
     """run login node setup"""
     log.info("Setting up login")
-    import tls_setup
-
-    tls_setup.main(
-        [
-            "--slurm-etc",
-            f"{slurmdirs.etc}",
-            "--slurm-user",
-            "slurm",
-            "--slurmrestd-user",
-            "slurm",
-            "--nodes",
-            f"{lkp.hostname}",
-            "--no-gen-certs",
-            "--use-certmgr",
-        ]
-    )
-    token_file = slurmdirs.etc / f"{lkp.hostname}_token.txt"
-    token = token_file.read_text()
-    nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
-    with closing(nfs.open("/node_token_list.txt", mode="a")) as token_list:
-        token_list.write(f"{lkp.hostname}: {token}\n")
 
     slurmctld_host = f"{lkp.control_host}"
     if lkp.control_addr:
         slurmctld_host = f"{lkp.control_host}({lkp.control_addr})"
+
     slurmd_options = [
         f"-N {lkp.hostname}",
         f'--conf-server="{slurmctld_host}:{lkp.control_host_port}"',
         f'--conf="Feature={login_nodeset}"',
         "-Z",
     ]
+
+    if cfg.slurm_tls:
+        import tls_setup
+
+        slurmd_options.append(f"--ca-cert-file {slurmdirs.etc}/ca_cert.pem")
+        copy_tls_certs()
+        tls_setup.main(
+            [
+                "--slurm-etc",
+                f"{slurmdirs.etc}",
+                "--slurm-user",
+                "slurm",
+                "--slurmrestd-user",
+                "slurm",
+                "--nodes",
+                f"{lkp.hostname}",
+                "--no-gen-certs",
+                "--use-certmgr",
+            ]
+        )
+        token_file = slurmdirs.etc / f"{lkp.hostname}_token.txt"
+        token = token_file.read_text()
+        nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
+        with closing(nfs.open("/node_token_list.txt", mode="a")) as token_list:
+            token_list.write(f"{lkp.hostname}: {token}\n")
+
     sysconf = f"""SLURMD_OPTIONS='{" ".join(slurmd_options)}'"""
     update_system_config("slurmd", sysconf)
     install_custom_scripts()
@@ -945,17 +935,15 @@ Restart=on-failure
             f'--conf-server="{slurmctld_host}:{lkp.control_host_port}"',
         ]
     )
-    if args.slurmd_feature is not None:
-        slurmd_options.append(f'--conf="Feature={args.slurmd_feature}"')
-        slurmd_options.append("-Z")
-    sysconf = f"""SLURMD_OPTIONS='{" ".join(slurmd_options)}'"""
-    update_system_config("slurmd", sysconf)
     install_custom_scripts()
 
     setup_nss_slurm()
     setup_network_storage()
     if cfg.slurm_auth == "slurm":
         copy_slurm_key()
+    if cfg.slurm_tls:
+        copy_tls_certs()
+        slurmd_options.append(f"--ca-cert-file {slurmdirs.etc}/ca_cert.pem")
 
     has_gpu = run("lspci | grep --ignore-case 'NVIDIA' | wc -l", shell=True).returncode
     if has_gpu:
@@ -965,6 +953,13 @@ Restart=on-failure
 
     # setup_slurmd_cronjob()
     setup_sudoers()
+
+    # finalize slurmd options
+    if args.slurmd_feature is not None:
+        slurmd_options.append(f'--conf="Feature={args.slurmd_feature}"')
+        slurmd_options.append("-Z")
+    sysconf = f"""SLURMD_OPTIONS='{" ".join(slurmd_options)}'"""
+    update_system_config("slurmd", sysconf)
 
     if cfg.slurm_auth != "slurm":
         run("systemctl restart munge", timeout=30)
