@@ -351,6 +351,8 @@ ctld_cert_file=/usr/local/etc/slurm/ctld_cert.pem,\
 ctld_cert_key_file=/usr/local/etc/slurm/ctld_cert_key.pem,\
 restd_cert_file=/usr/local/etc/slurm/restd_cert.pem,\
 restd_cert_key_file=/usr/local/etc/slurm/restd_cert_key.pem,\
+slurmd_cert_file=/usr/local/etc/slurm/slurmd_cert.pem,\
+slurmd_cert_key_file=/usr/local/etc/slurm/slurmd_cert_key.pem,\
 ca_cert_file=/usr/local/etc/slurm/ca_cert.pem
 """
     certmgr_conf = """

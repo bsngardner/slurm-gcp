@@ -68,6 +68,7 @@
   - pyproject.toml
   - conf.py
   - resume.py
+  - tls_setup.py
   - setup.py
   - startup.sh
   - slurmsync.py
