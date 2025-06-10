@@ -521,11 +521,11 @@ def copy_slurm_key():
     copy_from_controller(slurmdirs.etc / "slurm.key", slurmdirs.etc, "slurm.key")
 
 
-def copy_tls_certs():
+def copy_tls_cert():
     copy_from_controller(slurmdirs.etc / "ca_cert.pem", slurmdirs.etc, "ca_cert.pem")
-
-    token = slurmdirs.etc / f"{lkp.hostname}_token.txt"
-    copy_from_controller(token, slurmdirs.etc, token.name)
+    copy_from_controller(
+        slurmdirs.etc / "ca_cert_key.pem", slurmdirs.etc, "ca_cert_key.pem"
+    )
 
 
 def setup_nfs_exports():
@@ -782,8 +782,14 @@ def setup_controller(args):
                 "slurm",
                 "--nodes",
                 f"{static}",
-                "--use-certmgr",
+                "--gen-target",
+                "slurm",
+                "slurmctld",
+                "slurmdbd",
+                "slurmrestd",
             ]
+            if cfg.slurm_certmgr:
+                tls_args.append("--use-certmgr")
             log.debug("tls_setup {}".format(" ".join(tls_args)))
             tls_setup.main(tls_args)
 
@@ -853,26 +859,28 @@ def setup_login(args):
         import tls_setup
 
         slurmd_options.append(f"--ca-cert-file {slurmdirs.etc}/ca_cert.pem")
-        copy_tls_certs()
-        tls_setup.main(
-            [
-                "--slurm-etc",
-                f"{slurmdirs.etc}",
-                "--slurm-user",
-                "slurm",
-                "--slurmrestd-user",
-                "slurm",
-                "--nodes",
-                f"{lkp.hostname}",
-                "--no-gen-certs",
-                "--use-certmgr",
-            ]
-        )
-        token_file = slurmdirs.etc / f"{lkp.hostname}_token.txt"
-        token = token_file.read_text()
-        nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
-        with closing(nfs.open("/node_token_list.txt", mode="a")) as token_list:
-            token_list.write(f"{lkp.hostname}: {token}\n")
+        copy_tls_cert()
+        tls_args = [
+            "--slurm-etc",
+            f"{slurmdirs.etc}",
+            "--slurm-user",
+            "slurm",
+            "--slurmrestd-user",
+            "slurm",
+            "--nodes",
+            f"{lkp.hostname}",
+            "--gen-target",
+            "slurmd",
+        ]
+        if cfg.slurm_certmgr:
+            tls_args.append("--use-certmgr")
+        tls_setup.main(tls_args)
+        if cfg.slurm_certmgr:
+            token_file = slurmdirs.etc / f"{lkp.hostname}_token.txt"
+            token = token_file.read_text()
+            nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
+            with closing(nfs.open("/node_token_list.txt", mode="a")) as token_list:
+                token_list.write(f"{lkp.hostname}: {token}\n")
 
     sysconf = f"""SLURMD_OPTIONS='{" ".join(slurmd_options)}'"""
     update_system_config("slurmd", sysconf)
@@ -942,7 +950,30 @@ Restart=on-failure
     if cfg.slurm_auth == "slurm":
         copy_slurm_key()
     if cfg.slurm_tls:
-        copy_tls_certs()
+        import tls_setup
+
+        copy_tls_cert()
+        tls_args = [
+            "--slurm-etc",
+            f"{slurmdirs.etc}",
+            "--slurm-user",
+            "slurm",
+            "--slurmrestd-user",
+            "slurm",
+            "--nodes",
+            f"{lkp.hostname}",
+            "--gen-target",
+            "slurmd",
+        ]
+        if cfg.slurm_certmgr:
+            tls_args.append("--use-certmgr")
+        tls_setup.main(tls_args)
+        if cfg.slurm_certmgr:
+            token_file = slurmdirs.etc / f"{lkp.hostname}_token.txt"
+            token = token_file.read_text()
+            nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
+            with closing(nfs.open("/node_token_list.txt", mode="a")) as token_list:
+                token_list.write(f"{lkp.hostname}: {token}\n")
         slurmd_options.append(f"--ca-cert-file {slurmdirs.etc}/ca_cert.pem")
 
     has_gpu = run("lspci | grep --ignore-case 'NVIDIA' | wc -l", shell=True).returncode
