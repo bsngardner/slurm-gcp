@@ -447,6 +447,7 @@ def load_config_file(path):
 def save_config(cfg, path):
     """save given config to file at path"""
     Path(path).write_text(yaml.dump(cfg, Dumper=Dumper))
+    chown_slurm(path)
 
 
 def filter_logging_flags(record):
