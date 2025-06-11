@@ -53,7 +53,6 @@ from conf import (
     install_cgroup_conf,
     install_topology_conf,
     install_jobsubmit_lua,
-    login_nodeset,
 )
 import slurmsync
 
@@ -848,17 +847,14 @@ def setup_login(args):
     if lkp.control_addr:
         slurmctld_host = f"{lkp.control_host}({lkp.control_addr})"
 
-    slurmd_options = [
-        f"-N {lkp.hostname}",
+    sackd_options = [
         f'--conf-server="{slurmctld_host}:{lkp.control_host_port}"',
-        f'--conf="Feature={login_nodeset}"',
-        "-Z",
     ]
 
     if cfg.slurm_tls:
         import tls_setup
 
-        slurmd_options.append(f"--ca-cert-file {slurmdirs.etc}/ca_cert.pem")
+        sackd_options.append(f"--ca-cert-file {slurmdirs.etc}/ca_cert.pem")
         copy_tls_cert()
         tls_args = [
             "--slurm-etc",
@@ -868,34 +864,13 @@ def setup_login(args):
             "--slurmrestd-user",
             "slurm",
             "--gen-target",
-            "slurmd",
+            "sackd",
         ]
-        if cfg.slurm_certmgr:
-            tls_args.extend(
-                [
-                    "--use-certmgr",
-                    "--nodes",
-                    f"{lkp.hostname}",
-                ]
-            )
-        else:
-            tls_args.extend(
-                [
-                    "--nodes",
-                    "slurmd",
-                ]
-            )
 
         tls_setup.main(tls_args)
-        if cfg.slurm_certmgr:
-            token_file = slurmdirs.etc / f"{lkp.hostname}_token.txt"
-            token = token_file.read_text()
-            nfs = libnfs.NFS(f"nfs://{lkp.control_host_addr}{slurmdirs.etc}")
-            with closing(nfs.open("/node_token_list.txt", mode="a")) as token_list:
-                token_list.write(f"{lkp.hostname}: {token}\n")
 
-    sysconf = f"""SLURMD_OPTIONS='{" ".join(slurmd_options)}'"""
-    update_system_config("slurmd", sysconf)
+    sysconf = f"""SACKD_OPTIONS='{" ".join(sackd_options)}'"""
+    update_system_config("sackd", sysconf)
     install_custom_scripts()
 
     setup_network_storage()
@@ -905,8 +880,8 @@ def setup_login(args):
 
     if cfg.slurm_auth != "slurm":
         run("systemctl restart munge")
-    run("systemctl enable slurmd", timeout=30)
-    run("systemctl restart slurmd", timeout=30)
+    run("systemctl enable sackd", timeout=30)
+    run("systemctl restart sackd", timeout=30)
     run("systemctl enable --now slurmcmd.timer", timeout=30)
 
     run_custom_scripts()
@@ -914,7 +889,7 @@ def setup_login(args):
     log.info("Check status of cluster services")
     if cfg.slurm_auth != "slurm":
         run("systemctl status munge", timeout=30)
-    run("systemctl status slurmd", timeout=30)
+    run("systemctl status sackd", timeout=30)
 
     log.info("Done setting up login")
 

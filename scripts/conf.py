@@ -35,8 +35,6 @@ FILE_PREAMBLE = """
 # This file is managed by a script. Manual modifications will be overwritten.
 """
 
-login_nodeset = "x-login"
-
 
 def dict_to_conf(conf, delim=" "):
     """convert dict to delimited slurm-style key-value pairs"""
@@ -116,26 +114,6 @@ def conflines(cloud_parameters, lkp=lkp):
         "TopologyPlugin": "topology/tree",
     }
     return dict_to_conf(conf_options, delim="\n")
-
-
-def loginlines():
-    nodeset = {
-        "NodeSet": login_nodeset,
-        "Feature": login_nodeset,
-    }
-    partition = {
-        "PartitionName": login_nodeset,
-        "Nodes": login_nodeset,
-        "State": "UP",
-        "DefMemPerCPU": 1,
-        "Hidden": "YES",
-        "RootOnly": "YES",
-    }
-    lines = [
-        dict_to_conf(nodeset),
-        dict_to_conf(partition),
-    ]
-    return "\n".join(lines)
 
 
 def split_range(mult, start, end):
@@ -308,18 +286,13 @@ def make_cloud_conf(lkp=lkp, cloud_parameters=None):
     suspend_exc_nodes = {
         "SuspendExcNodes": static_nodes,
     }
-    suspend_exc_parts = {
-        "SuspendExcParts": login_nodeset,
-    }
     suspend_exc = [
         dict_to_conf(suspend_exc_nodes) if static_nodes else None,
-        dict_to_conf(suspend_exc_parts),
     ]
 
     lines = [
         FILE_PREAMBLE,
         conflines(cloud_parameters, lkp),
-        loginlines(),
         *(nodeset_lines(n, lkp) for n in lkp.cfg.nodeset.values()),
         *(nodeset_dyn_lines(n, lkp) for n in lkp.cfg.nodeset_dyn.values()),
         *(nodeset_tpu_lines(n, lkp) for n in lkp.cfg.nodeset_tpu.values()),
@@ -353,6 +326,8 @@ restd_cert_file=/usr/local/etc/slurm/restd_cert.pem,\
 restd_cert_key_file=/usr/local/etc/slurm/restd_cert_key.pem,\
 slurmd_cert_file=/usr/local/etc/slurm/slurmd_cert.pem,\
 slurmd_cert_key_file=/usr/local/etc/slurm/slurmd_cert_key.pem,\
+sackd_cert_file=/usr/local/etc/slurm/sackd_cert.pem,\
+sackd_cert_key_file=/usr/local/etc/slurm/sackd_cert_key.pem,\
 ca_cert_file=/usr/local/etc/slurm/ca_cert.pem
 """
     certmgr_conf = """
