@@ -522,6 +522,7 @@ def copy_slurm_key():
 
 def copy_tls_cert():
     copy_from_controller(slurmdirs.etc / "ca_cert.pem", slurmdirs.etc, "ca_cert.pem")
+    (slurmdirs.etc / "ca_cert.pem").chmod(0o444)
     copy_from_controller(
         slurmdirs.etc / "ca_cert_key.pem", slurmdirs.etc, "ca_cert_key.pem"
     )
