@@ -502,10 +502,10 @@ def main():
     except Exception:
         log.exception("failed to sync instances")
 
-    try:
-        sync_placement_groups()
-    except Exception:
-        log.exception("failed to sync placement groups")
+    # try:
+    #    sync_placement_groups()
+    # except Exception:
+    #    log.exception("failed to sync placement groups")
 
 
 parser = argparse.ArgumentParser(
