@@ -808,7 +808,7 @@ def setup_controller(args):
         result.check_returncode()  # will raise error
 
     run("systemctl enable slurmctld", timeout=30)
-    # run("systemctl restart slurmctld", timeout=30)
+    run("systemctl restart slurmctld", timeout=30)
 
     # run("systemctl enable slurmrestd", timeout=30)
     # run("systemctl restart slurmrestd", timeout=30)
