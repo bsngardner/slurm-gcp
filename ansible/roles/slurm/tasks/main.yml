@@ -76,13 +76,6 @@
   - util.py
   - load_bq.py
 
-- name: Install virtual env
-  shell:
-    chdir: '{{slurm_paths.scripts}}'
-    cmd: |
-      python3 -m uv venv
-      python3 -m uv sync -p 3.11
-
 - name: Copy slurm_gcp_plugins
   copy:
     src: scripts/slurm_gcp_plugins

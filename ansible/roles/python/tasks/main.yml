@@ -68,15 +68,15 @@
   - '{{ ansible_os_family|lower }}_requirements.txt'
   register: requirements_file
 
+- name: update alternatives to python311
+  shell:
+    cmd: alternatives --set python3 /usr/bin/python3.11
+
 - name: Install uv pip
   pip:
     name: uv
     state: present
     executable: pip3
-
-- name: update alternatives to python311
-  shell:
-    cmd: alternatives --set python3 /usr/bin/python3.11
 
 - name: Upgrade Pip
   pip:
@@ -101,5 +101,5 @@
   shell:
     chdir: '{{slurm_paths.scripts}}'
     cmd: |
-      python3 -m uv venv
-      python3 -m uv sync -p 3.11
+      python3 -m uv venv -p 3.11
+      python3 -m uv pip install -p .venv --upgrade -r {{ requirements_file.results[0].dest }}
