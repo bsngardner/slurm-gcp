@@ -305,7 +305,8 @@ def do_node_update(status, nodes):
         log.error(f"{count} nodes have unexpected status: ({hostlist})")
         first = next(iter(nodes))
         state = lkp.slurm_node(first)
-        state = "{}+{}".format(state.base, "+".join(state.flags))
+        if state is not None:
+            state = "{}+{}".format(state.base, "+".join(state.flags))
         inst = lkp.instance(first)
         log.error(f"{first} state: {state}, instance status:{inst.status}")
 

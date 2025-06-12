@@ -1564,17 +1564,36 @@ class Lookup:
             state_tuple = StateTuple(state[0], set(state[1:]))
             return (node, state_tuple)
 
+        node_count = sum(
+            nodeset.node_count_static + nodeset.node_count_dynamic
+            for nodeset in self.cfg.nodeset
+        )
+        nodes = {}
         cmd = (
             f"{self.scontrol} show nodes | "
             r"grep -oP '^NodeName=\K(\S+)|\s+State=\K(\S+)' | "
             r"paste -sd',\n'"
         )
-        node_lines = run(cmd, shell=True).stdout.rstrip().splitlines()
-        nodes = {
-            node: state
-            for node, state in map(make_node_tuple, node_lines)
-            if "CLOUD" in state.flags or "DYNAMIC_NORM" in state.flags
-        }
+        for wait in backoff_delay(0.125, timeout=60, count=20):
+            node_lines = run(cmd, shell=True).stdout.rstrip().splitlines()
+            nodes = {
+                node: state
+                for node, state in map(make_node_tuple, node_lines)
+                if "CLOUD" in state.flags or "DYNAMIC_NORM" in state.flags
+            }
+            if len(nodes) == node_count:
+                break
+            log.error(
+                "expected nodes not found in slurm, got \n{}".format(
+                    "\n".join(
+                        f"{node}: {state.base}+{'+'.join(state.flags)}"
+                        for node, state in nodes.items()
+                    )
+                )
+            )
+            sleep(wait)
+        else:
+            raise Exception("failed to get slurm node states after much time")
         return nodes
 
     def slurm_node(self, nodename):
