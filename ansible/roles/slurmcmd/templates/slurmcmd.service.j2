@@ -6,6 +6,7 @@ Wants=slurmcmd.timer
 Type=oneshot
 User={{service_user}}
 ExecStart={{service_path}}/slurmsync.py
+LimitMEMLOCK=infinity
 
 [Install]
 WantedBy=multi-user.target

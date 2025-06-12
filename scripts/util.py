@@ -1565,8 +1565,8 @@ class Lookup:
             return (node, state_tuple)
 
         node_count = sum(
-            nodeset.node_count_static + nodeset.node_count_dynamic
-            for nodeset in self.cfg.nodeset
+            int(nodeset.node_count_static) + int(nodeset.node_count_dynamic_max)
+            for nodeset in self.cfg.nodeset.values()
         )
         nodes = {}
         cmd = (
@@ -1575,7 +1575,11 @@ class Lookup:
             r"paste -sd',\n'"
         )
         for wait in backoff_delay(0.125, timeout=60, count=20):
-            node_lines = run(cmd, shell=True).stdout.rstrip().splitlines()
+            proc = run(cmd, shell=True)
+            if proc.stderr:
+                log.warning(proc.stderr)
+            node_lines = proc.stdout.rstrip().splitlines()
+            log.debug(node_lines)
             nodes = {
                 node: state
                 for node, state in map(make_node_tuple, node_lines)
