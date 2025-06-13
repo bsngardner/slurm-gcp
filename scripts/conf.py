@@ -363,6 +363,13 @@ get_node_cert_key_script=/usr/local/etc/slurm/certmgr_get_node_key.sh
 
 def install_slurmdbd_conf(lkp=lkp):
     """install slurmdbd.conf"""
+    tls_conf = """
+TLSType=tls/s2n
+TLSParameters=\
+dbd_cert_file=/usr/local/etc/slurm/dbd_cert.pem,\
+dbd_cert_key_file=/usr/local/etc/slurm/dbd_cert_key.pem,\
+ca_cert_file=/usr/local/etc/slurm/ca_cert.pem
+"""
     conf_options = NSDict(
         {
             "control_host": lkp.control_host,
@@ -374,6 +381,7 @@ def install_slurmdbd_conf(lkp=lkp):
             "db_host": "localhost",
             "db_port": "3306",
             "slurm_auth": cfg.slurm_auth or "munge",
+            "tls_conf": tls_conf if cfg.slurm_tls else "",
         }
     )
     if lkp.cfg.cloudsql_secret:
