@@ -49,10 +49,10 @@ module "router" {
 
   for_each = module.network.subnets
 
-  name    = "${each.value.name}-router"
-  project = var.project_id
-  region  = each.value.region
-  network = module.network.network.network_id
+  name       = "${each.value.name}-router"
+  project_id = var.project_id
+  region     = each.value.region
+  network    = module.network.network.network_id
 }
 
 #######
