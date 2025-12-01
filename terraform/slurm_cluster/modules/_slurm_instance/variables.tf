@@ -107,6 +107,12 @@ variable "labels" {
   default     = {}
 }
 
+variable "placement_policy" {
+  type        = string
+  description = "instance placement policy"
+  default     = null
+}
+
 #########
 # SLURM #
 #########

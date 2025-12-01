@@ -59,13 +59,14 @@ module "slurm_controller_instance" {
   hostname            = "${var.slurm_cluster_name}-controller"
   instance_template   = var.instance_template
   network             = var.network
+  placement_policy    = var.placement_policy
   project_id          = var.project_id
   region              = local.region
   slurm_cluster_name  = var.slurm_cluster_name
   slurm_instance_role = "controller"
   static_ips          = var.static_ips
-  subnetwork_project  = var.subnetwork_project
   subnetwork          = var.subnetwork
+  subnetwork_project  = var.subnetwork_project
   zone                = var.zone
 
   metadata = var.metadata

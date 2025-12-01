@@ -132,6 +132,7 @@ module "instance_template" {
   preemptible              = var.preemptible
   spot                     = var.spot
   on_host_maintenance      = var.on_host_maintenance
+  automatic_restart        = var.automatic_restart
   labels = merge(
     var.labels,
     {

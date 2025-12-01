@@ -62,10 +62,11 @@ data "local_file" "startup" {
 #############
 
 resource "google_compute_instance_from_template" "slurm_instance" {
-  count   = local.num_instances
-  name    = var.add_hostname_suffix ? format("%s%s%s", local.hostname, var.hostname_suffix_separator, format("%03d", count.index + 1)) : local.hostname
-  project = var.project_id
-  zone    = var.zone == null ? data.google_compute_zones.available.names[count.index % length(data.google_compute_zones.available.names)] : var.zone
+  count             = local.num_instances
+  name              = var.add_hostname_suffix ? format("%s%s%s", local.hostname, var.hostname_suffix_separator, format("%03d", count.index + 1)) : local.hostname
+  project           = var.project_id
+  zone              = var.zone == null ? data.google_compute_zones.available.names[count.index % length(data.google_compute_zones.available.names)] : var.zone
+  resource_policies = var.placement_policy == null ? [] : [var.placement_policy]
 
   allow_stopping_for_update = true
 

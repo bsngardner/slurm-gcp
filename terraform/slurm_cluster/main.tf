@@ -85,6 +85,8 @@ resource "google_storage_bucket_iam_binding" "legacyReaders" {
   members = compact(local.viewers)
 }
 
+
+
 ###############
 # SLURM FILES #
 ###############
@@ -141,6 +143,16 @@ module "slurm_files" {
   ]
 }
 
+resource "google_compute_resource_policy" "controller_policy" {
+  count  = var.enable_controller_placement ? 1 : 0
+  name   = "${var.slurm_cluster_name}-controller-policy"
+  region = var.region
+  group_placement_policy {
+    vm_count    = length(var.login_nodes) + 1
+    collocation = "COLLOCATED"
+  }
+}
+
 ##################
 # SLURM NODESETS #
 ##################
@@ -183,6 +195,7 @@ module "slurm_nodeset_template" {
   min_cpu_platform         = each.value.min_cpu_platform
   name_prefix              = each.value.nodeset_name
   on_host_maintenance      = each.value.on_host_maintenance
+  automatic_restart        = each.value.automatic_restart
   preemptible              = each.value.preemptible
   project_id               = var.project_id
   service_account          = each.value.service_account
@@ -299,6 +312,7 @@ module "slurm_controller_template" {
   min_cpu_platform         = var.controller_instance_config.min_cpu_platform
   network_ip               = var.controller_instance_config.network_ip != null ? var.controller_instance_config.network_ip : ""
   on_host_maintenance      = var.controller_instance_config.on_host_maintenance
+  automatic_restart        = var.controller_instance_config.automatic_restart
   preemptible              = var.controller_instance_config.preemptible
   project_id               = var.project_id
   region                   = var.controller_instance_config.region
@@ -329,6 +343,7 @@ module "slurm_controller_instance" {
   enable_public_ip   = var.controller_instance_config.enable_public_ip
   instance_template  = local.have_template ? var.controller_instance_config.instance_template : module.slurm_controller_template[0].self_link
   network_tier       = var.controller_instance_config.network_tier
+  placement_policy   = var.enable_controller_placement ? google_compute_resource_policy.controller_policy[0].self_link : null
   project_id         = var.project_id
   region             = var.controller_instance_config.region
   slurm_cluster_name = var.slurm_cluster_name
@@ -394,6 +409,7 @@ module "slurm_login_template" {
   min_cpu_platform         = each.value.min_cpu_platform
   name_prefix              = each.value.group_name
   on_host_maintenance      = each.value.on_host_maintenance
+  automatic_restart        = each.value.automatic_restart
   preemptible              = each.value.preemptible
   project_id               = var.project_id
   region                   = each.value.region
@@ -428,6 +444,7 @@ module "slurm_login_instance" {
   )
   network_tier       = each.value.network_tier
   num_instances      = each.value.num_instances
+  placement_policy   = var.enable_controller_placement ? google_compute_resource_policy.controller_policy[0].self_link : null
   project_id         = var.project_id
   region             = each.value.region
   slurm_cluster_name = var.slurm_cluster_name

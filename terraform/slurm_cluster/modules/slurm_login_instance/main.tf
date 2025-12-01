@@ -45,6 +45,7 @@ module "slurm_login_instance" {
   network             = var.network
   num_instances       = var.num_instances
   project_id          = var.project_id
+  placement_policy    = var.placement_policy
   region              = local.region
   slurm_cluster_name  = var.slurm_cluster_name
   slurm_instance_role = "login"

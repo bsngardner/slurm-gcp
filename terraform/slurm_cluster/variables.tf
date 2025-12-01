@@ -106,6 +106,7 @@ EOD
     network_ip          = optional(string)
     network_tier        = optional(string, "STANDARD")
     on_host_maintenance = optional(string)
+    automatic_restart   = optional(bool, true)
     preemptible         = optional(bool, false)
     region              = optional(string)
     service_account = optional(object({
@@ -129,6 +130,12 @@ EOD
     zone                 = optional(string)
   })
   default = {}
+}
+
+variable "enable_controller_placement" {
+  type        = bool
+  description = "turn on placement group for login and controller"
+  default     = true
 }
 
 ######################
@@ -216,6 +223,7 @@ variable "login_nodes" {
     network_tier        = optional(string, "STANDARD")
     num_instances       = optional(number, 1)
     on_host_maintenance = optional(string)
+    automatic_restart   = optional(bool, true)
     preemptible         = optional(bool, false)
     region              = optional(string)
     service_account = optional(object({
@@ -286,6 +294,7 @@ variable "nodeset" {
     multiplicity         = optional(number, 1)
     network_tier         = optional(string, "STANDARD")
     on_host_maintenance  = optional(string)
+    automatic_restart    = optional(bool, true)
     preemptible          = optional(bool, false)
     region               = optional(string)
     reservation_name     = optional(string)

@@ -98,6 +98,12 @@ EOD
   default     = null
 }
 
+variable "placement_policy" {
+  type        = string
+  description = "controller placement policy"
+  default     = null
+}
+
 #########
 # SLURM #
 #########

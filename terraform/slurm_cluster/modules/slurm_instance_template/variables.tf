@@ -29,6 +29,12 @@ variable "on_host_maintenance" {
   default     = "MIGRATE"
 }
 
+variable "automatic_restart" {
+  type        = bool
+  description = "(Optional) Specifies whether the instance should be automatically restarted if it is terminated by Compute Engine (not terminated by a user)."
+  default     = true
+}
+
 variable "labels" {
   type        = map(string)
   description = "Labels, provided as a map"

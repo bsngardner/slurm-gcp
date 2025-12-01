@@ -97,6 +97,12 @@ variable "metadata" {
   default     = {}
 }
 
+variable "placement_policy" {
+  type        = string
+  description = "controller placement policy"
+  default     = null
+}
+
 #########
 # SLURM #
 #########
