@@ -148,7 +148,6 @@ resource "google_compute_resource_policy" "controller_policy" {
   name   = "${var.slurm_cluster_name}-controller-policy"
   region = var.region
   group_placement_policy {
-    vm_count    = length(var.login_nodes) + 1
     collocation = "COLLOCATED"
   }
 }
